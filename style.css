@@ -15,158 +15,25 @@ body {
     height: 100vh;
     overflow: hidden;
     box-shadow: inset 0 0 100px #000;
-    transition: filter 0.2s;
 }
 
 
-/* BAŞARIM POPUP */
+/* PERFORMANS AYARI: Bu satır donmayı engeller */
 
-#achievement-popup {
-    position: absolute;
-    top: -100px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 300px;
-    background: rgba(0, 50, 100, 0.9);
-    border: 2px solid #ffd700;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    padding: 15px;
-    z-index: 600;
-    transition: top 0.5s ease-out;
-    box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-}
-
-#achievement-popup.show {
-    top: 20px;
-}
-
-#achievement-popup .icon {
-    font-size: 2.5rem;
-    margin-right: 15px;
-}
-
-#achievement-popup .title {
-    color: #ffd700;
-    font-weight: bold;
-    font-size: 0.9rem;
-    margin-bottom: 5px;
-}
-
-#achievement-popup #ach-desc {
-    font-size: 1.1rem;
-    font-weight: bold;
+#player,
+.enemy-ship,
+.kamikaze,
+.interceptor,
+.laser,
+.scrap,
+.particle {
+    will-change: transform, left, top;
+    transform: translateZ(0);
+    /* GPU'yu zorla devreye sokar */
 }
 
 
-/* DALGA MESAJI */
-
-#wave-msg {
-    position: absolute;
-    top: 40%;
-    width: 100%;
-    text-align: center;
-    font-size: 4rem;
-    color: #fff;
-    text-shadow: 0 0 30px #00f0ff;
-    display: none;
-    animation: zoomFade 3s forwards;
-    z-index: 400;
-    letter-spacing: 10px;
-}
-
-@keyframes zoomFade {
-    0% {
-        transform: scale(0.5);
-        opacity: 0;
-    }
-    20% {
-        transform: scale(1.2);
-        opacity: 1;
-    }
-    80% {
-        opacity: 1;
-    }
-    100% {
-        transform: scale(2);
-        opacity: 0;
-    }
-}
-
-
-/* MARKET TABLARI */
-
-.shop-tabs {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-.tab-btn {
-    background: rgba(0, 0, 0, 0.5);
-    border: 1px solid #00f0ff;
-    color: #aaa;
-    padding: 10px 20px;
-    cursor: pointer;
-    font-family: 'Orbitron';
-}
-
-.tab-btn.active {
-    background: #00f0ff;
-    color: #000;
-    font-weight: bold;
-}
-
-.shop-content {
-    display: none;
-}
-
-.shop-content.active {
-    display: block;
-}
-
-
-/* SKIN STILLERI (Filtreler ile) */
-
-.skin-item .skin-preview {
-    font-size: 3rem;
-    margin-bottom: 10px;
-    transition: 0.3s;
-}
-
-.skin-preview.crimson,
-.player-crimson {
-    filter: hue-rotate(320deg) saturate(2);
-}
-
-.skin-preview.midas,
-.player-midas {
-    filter: sepia(1) saturate(3) hue-rotate(350deg) brightness(1.2);
-}
-
-.skin-preview.void,
-.player-void {
-    filter: grayscale(1) invert(1) brightness(1.5);
-}
-
-.wave-info {
-    font-size: 1.2rem;
-    color: #00ff00;
-    font-weight: bold;
-    margin: 0 20px;
-    text-shadow: 0 0 10px #00ff00;
-}
-
-
-/* ÖNCEKİ ÖNEMLİ STİLLER (Korumalı) */
-
-
-/* (Buraya önceki style.css içeriğini yapıştırın veya üzerine yazın) */
-
-
-/* --- KISALTILMIŞ --- */
+/* UI VE EKRANLAR */
 
 .screen {
     position: absolute;
@@ -247,6 +114,9 @@ body {
     cursor: not-allowed;
 }
 
+
+/* OYUNCU */
+
 #player {
     position: absolute;
     bottom: 100px;
@@ -255,8 +125,11 @@ body {
     height: 80px;
     transform: translateX(-50%);
     z-index: 100;
-    transition: filter 0.3s;
+    transition: filter 0.1s;
 }
+
+
+/* Filter transition hızlandırıldı */
 
 .rocket-img {
     width: 100%;
@@ -264,9 +137,108 @@ body {
     background-image: url('rocket.png');
     background-size: contain;
     background-repeat: no-repeat;
-    filter: drop-shadow(0 0 10px #00f0ff);
+    filter: drop-shadow(0 0 5px #00f0ff);
     position: relative;
     z-index: 2;
+}
+
+
+/* DÜŞMANLAR (Gölgeler hafifletildi) */
+
+.enemy-ship {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(180deg, #ff0055, #550000);
+    clip-path: polygon(20% 0, 80% 0, 100% 100%, 50% 80%, 0 100%);
+    z-index: 90;
+}
+
+.kamikaze {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    background: #ffaa00;
+    clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+    z-index: 90;
+    animation: spin-fast 0.5s linear infinite;
+}
+
+.interceptor {
+    position: absolute;
+    width: 35px;
+    height: 35px;
+    background: #9900ff;
+    clip-path: polygon(50% 0, 100% 70%, 50% 100%, 0 70%);
+    z-index: 90;
+}
+
+
+/* Box-shadow kaldırıldı (kasma yapar) */
+
+@keyframes spin-fast {
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+
+/* BOSS */
+
+.boss-ship {
+    position: absolute;
+    width: 200px;
+    height: 150px;
+    top: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 95;
+}
+
+.boss-body {
+    width: 100%;
+    height: 100%;
+    background: #220000;
+    clip-path: polygon(0 0, 100% 0, 80% 100%, 20% 100%);
+    border-top: 5px solid #ff0000;
+}
+
+.boss-core {
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 40px;
+    background: #ff0000;
+    border-radius: 50%;
+    box-shadow: 0 0 20px #ff0000;
+}
+
+
+/* Gölge azaltıldı */
+
+
+/* MERMİLER VE EFEKTLER */
+
+.laser {
+    position: absolute;
+    width: 4px;
+    height: 20px;
+    background: #00f0ff;
+    z-index: 5;
+}
+
+
+/* Gölge kaldırıldı */
+
+.enemy-laser {
+    position: absolute;
+    width: 6px;
+    height: 20px;
+    background: #ff0000;
+    border-radius: 50%;
+    z-index: 6;
 }
 
 .scrap {
@@ -275,22 +247,45 @@ body {
     height: 15px;
     background: #ffd700;
     clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
-    box-shadow: 0 0 10px #ffd700;
     z-index: 85;
     animation: spinCoin 1s linear infinite;
 }
 
 @keyframes spinCoin {
     0% {
-        transform: rotate(0deg) scale(0.8);
-    }
-    50% {
-        transform: rotate(180deg) scale(1.2);
+        transform: rotate(0deg);
     }
     100% {
-        transform: rotate(360deg) scale(0.8);
+        transform: rotate(360deg);
     }
 }
+
+
+/* PATLAMA (Daha hafif) */
+
+.explosion {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    background: radial-gradient(circle, #fff, #ffaa00, transparent);
+    border-radius: 50%;
+    animation: boom 0.3s forwards;
+    z-index: 99;
+}
+
+@keyframes boom {
+    0% {
+        transform: scale(0.2);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+
+/* HUD ve DİĞERLERİ */
 
 .hud {
     position: absolute;
@@ -323,7 +318,6 @@ body {
     font-size: 1.5rem;
     color: #ffeb3b;
     font-weight: 900;
-    text-shadow: 0 0 10px #ff5722;
     margin-left: 10px;
     transition: transform 0.1s;
 }
@@ -360,19 +354,17 @@ body {
     position: absolute;
     font-weight: bold;
     font-size: 1.2rem;
-    text-shadow: 0 0 5px #000;
+    text-shadow: 0 0 2px #000;
     animation: floatUp 0.8s forwards;
 }
 
 .dmg-white {
     color: #fff;
-    font-size: 1rem;
 }
 
 .dmg-crit {
     color: #ffaa00;
     font-size: 1.5rem;
-    text-shadow: 0 0 10px #ff0000;
 }
 
 .text-heal {
@@ -381,17 +373,17 @@ body {
 
 @keyframes floatUp {
     0% {
-        transform: translateY(0) scale(1);
+        transform: translateY(0);
         opacity: 1;
     }
     100% {
-        transform: translateY(-50px) scale(1.2);
+        transform: translateY(-30px);
         opacity: 0;
     }
 }
 
 
-/* Mobil, Laser, Enemy stilleri aynı kalacak */
+/* MOBİL & EFEKTLER */
 
 #mobile-controls {
     position: absolute;
@@ -458,116 +450,6 @@ body {
     border-color: #00aaff;
 }
 
-
-/* Boss ve Enemy stilleri */
-
-.enemy-ship {
-    position: absolute;
-    width: 40px;
-    height: 40px;
-    background: linear-gradient(180deg, #ff0055, #550000);
-    clip-path: polygon(20% 0, 80% 0, 100% 100%, 50% 80%, 0 100%);
-    z-index: 90;
-}
-
-.kamikaze {
-    position: absolute;
-    width: 30px;
-    height: 30px;
-    background: #ffaa00;
-    clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
-    z-index: 90;
-    animation: spin-fast 0.5s linear infinite;
-}
-
-.interceptor {
-    position: absolute;
-    width: 35px;
-    height: 35px;
-    background: #9900ff;
-    clip-path: polygon(50% 0, 100% 70%, 50% 100%, 0 70%);
-    z-index: 90;
-    box-shadow: 0 0 15px #9900ff;
-}
-
-@keyframes spin-fast {
-    100% {
-        transform: rotate(360deg);
-    }
-}
-
-.boss-ship {
-    position: absolute;
-    width: 200px;
-    height: 150px;
-    top: 50px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 95;
-}
-
-.boss-body {
-    width: 100%;
-    height: 100%;
-    background: #220000;
-    clip-path: polygon(0 0, 100% 0, 80% 100%, 20% 100%);
-    border-top: 5px solid #ff0000;
-}
-
-.boss-core {
-    position: absolute;
-    top: 30%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 40px;
-    height: 40px;
-    background: #ff0000;
-    border-radius: 50%;
-    box-shadow: 0 0 50px #ff0000;
-}
-
-.laser {
-    position: absolute;
-    width: 4px;
-    height: 20px;
-    background: #00f0ff;
-    box-shadow: 0 0 10px #00f0ff;
-    z-index: 5;
-}
-
-.enemy-laser {
-    position: absolute;
-    width: 6px;
-    height: 20px;
-    background: #ff0000;
-    border-radius: 50%;
-    z-index: 6;
-}
-
-.explosion {
-    position: absolute;
-    width: 60px;
-    height: 60px;
-    background: radial-gradient(circle, #fff, #ffaa00, transparent);
-    border-radius: 50%;
-    animation: boom 0.4s forwards;
-    z-index: 99;
-}
-
-@keyframes boom {
-    0% {
-        transform: scale(0.1);
-        opacity: 1;
-    }
-    100% {
-        transform: scale(2);
-        opacity: 0;
-    }
-}
-
-
-/* Efektler */
-
 #glitch-overlay {
     position: absolute;
     top: 0;
@@ -617,7 +499,6 @@ body {
     border: 2px solid #ff00ff;
     border-radius: 50%;
     opacity: 0;
-    box-shadow: 0 0 30px #ff00ff, inset 0 0 20px #ff00ff;
     z-index: 99;
     pointer-events: none;
 }
@@ -640,4 +521,450 @@ body {
         transform: scale(1);
         opacity: 0.8;
     }
+}
+
+
+/* Market Tabs vb. */
+
+.shop-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.tab-btn {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid #00f0ff;
+    color: #aaa;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-family: 'Orbitron';
+}
+
+.tab-btn.active {
+    background: #00f0ff;
+    color: #000;
+    font-weight: bold;
+}
+
+.shop-content {
+    display: none;
+}
+
+.shop-content.active {
+    display: block;
+}
+
+.skin-item .skin-preview {
+    font-size: 3rem;
+    margin-bottom: 10px;
+    transition: 0.3s;
+}
+
+.skin-preview.crimson,
+.player-crimson {
+    filter: hue-rotate(320deg) saturate(2);
+}
+
+.skin-preview.midas,
+.player-midas {
+    filter: sepia(1) saturate(3) hue-rotate(350deg) brightness(1.2);
+}
+
+.skin-preview.void,
+.player-void {
+    filter: grayscale(1) invert(1) brightness(1.5);
+}
+
+.wave-info {
+    font-size: 1.2rem;
+    color: #00ff00;
+    font-weight: bold;
+    margin: 0 20px;
+    text-shadow: 0 0 10px #00ff00;
+}
+
+#boss-warning {
+    position: absolute;
+    top: 40%;
+    width: 100%;
+    text-align: center;
+    color: #ff0000;
+    font-size: 2rem;
+    background: rgba(0, 0, 0, 0.8);
+    display: none;
+    animation: blink 0.5s infinite;
+    z-index: 250;
+}
+
+@keyframes blink {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+#wave-msg {
+    position: absolute;
+    top: 40%;
+    width: 100%;
+    text-align: center;
+    font-size: 4rem;
+    color: #fff;
+    text-shadow: 0 0 30px #00f0ff;
+    display: none;
+    animation: zoomFade 3s forwards;
+    z-index: 400;
+    letter-spacing: 10px;
+}
+
+@keyframes zoomFade {
+    0% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+    20% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
+    80% {
+        opacity: 1;
+    }
+    100% {
+        transform: scale(2);
+        opacity: 0;
+    }
+}
+
+#achievement-popup {
+    position: absolute;
+    top: -100px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 300px;
+    background: rgba(0, 50, 100, 0.9);
+    border: 2px solid #ffd700;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    z-index: 600;
+    transition: top 0.5s ease-out;
+}
+
+#achievement-popup.show {
+    top: 20px;
+}
+
+#achievement-popup .icon {
+    font-size: 2.5rem;
+    margin-right: 15px;
+}
+
+#achievement-popup .title {
+    color: #ffd700;
+    font-weight: bold;
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+}
+
+#achievement-popup #ach-desc {
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+
+
+/* --- HUD DÜZELTME YAMASI --- */
+
+
+/* Üst paneli düzenle */
+
+.hud-top {
+    display: flex;
+    align-items: flex-start;
+    /* Yukarı hizala */
+    justify-content: space-between;
+    width: 100%;
+    padding: 20px;
+}
+
+
+/* Sağ taraftaki barları hizala */
+
+.overdrive-container,
+.hp-box {
+    display: flex;
+    flex-direction: column;
+    /* Yazı üstte, bar altta olsun */
+    align-items: flex-end;
+    /* Sağa yasla */
+    margin-left: 15px;
+}
+
+
+/* Yazı etiketleri */
+
+.label,
+.hp-box {
+    font-size: 1rem;
+    color: #fff;
+    text-shadow: 0 0 5px #00f3ff;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+
+/* Barların Arka Planı (Kutusu) */
+
+.bar-bg,
+.hp-bar-bg {
+    width: 150px !important;
+    /* Genişlik zorla */
+    height: 15px !important;
+    /* Yükseklik zorla */
+    background: #222 !important;
+    /* Koyu gri zemin (Görünür olsun) */
+    border: 2px solid #fff !important;
+    /* Beyaz çerçeve */
+    border-radius: 4px;
+    overflow: hidden;
+    display: block !important;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    transform: skewX(-20deg);
+    /* Bilim kurgu eğimi */
+}
+
+
+/* Barların Dolgu Kısmı */
+
+#overdrive-bar {
+    height: 100% !important;
+    background: linear-gradient(90deg, #ff00ff, #00f3ff) !important;
+    box-shadow: 0 0 10px #ff00ff;
+    width: 0%;
+    /* Başlangıçta boş */
+    transition: width 0.3s;
+    display: block;
+}
+
+#player-hp-bar {
+    height: 100% !important;
+    background: linear-gradient(90deg, #ff3333, #ffaa00) !important;
+    box-shadow: 0 0 10px #ff3333;
+    width: 100%;
+    /* Başlangıçta dolu */
+    transition: width 0.3s;
+    display: block;
+}
+
+
+/* Boss Barı Düzeltmesi */
+
+.boss-hud {
+    position: absolute;
+    top: 80px;
+    /* Biraz aşağı al */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 400px;
+    text-align: center;
+    display: none;
+    /* Boss gelince JS açacak */
+}
+
+.boss-bar-bg {
+    width: 100%;
+    height: 20px;
+    background: #220000;
+    border: 2px solid #ff0000;
+    margin-top: 5px;
+}
+
+#boss-hp-bar {
+    width: 100%;
+    height: 100%;
+    background: #ff0000;
+    box-shadow: 0 0 15px #ff0000;
+}
+
+
+/* --- ALT HUD (ZAMAN & BOMBA) DÜZELTME --- */
+
+
+/* Alt paneli ekranın altına sabitle ve yukarı it */
+
+.hud-bottom {
+    position: absolute;
+    bottom: 20px;
+    left: 0;
+    width: 100%;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    pointer-events: none;
+    /* Tıklamaları engelleme */
+}
+
+
+/* Zaman Barı Kutusu */
+
+.gauge-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    /* Sola yasla */
+}
+
+
+/* Zaman Barının Kendisi (Mavi) */
+
+#slowmo-bar {
+    height: 100% !important;
+    background: linear-gradient(90deg, #00aaff, #00f3ff) !important;
+    box-shadow: 0 0 15px #00aaff;
+    width: 100%;
+    display: block !important;
+}
+
+
+/* Bomba Kutusu */
+
+.bomb-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    /* Sağa yasla */
+}
+
+
+/* Bomba İkonları */
+
+#bomb-count {
+    font-size: 1.5rem;
+    color: #ff3333;
+    text-shadow: 0 0 10px #ff3333;
+    margin-top: 5px;
+    font-weight: bold;
+}
+
+
+/* Etiketlerin (Yazıların) Görünürlüğü */
+
+.hud-bottom .label {
+    font-size: 1rem;
+    color: #fff;
+    text-shadow: 0 0 5px #00f3ff;
+    margin-bottom: 5px;
+    font-weight: bold;
+    background: rgba(0, 0, 0, 0.5);
+    /* Yazı arkasına hafif gölge */
+    padding: 2px 5px;
+    border-radius: 3px;
+}
+
+
+/* --- HUD KENAR DÜZELTMESİ (BOMBALAR İÇİN) --- */
+
+.hud-bottom {
+    position: absolute;
+    bottom: 25px;
+    /* Biraz daha yukarı */
+    left: 0;
+    width: 100%;
+    /* Kenarlardan boşluğu artırdık (20px -> 50px) böylece bombalar içeri kayar */
+    padding: 0 50px !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    pointer-events: none;
+    box-sizing: border-box;
+    /* Padding'in taşmasını engeller */
+}
+
+
+/* Bomba Kutusunu Hizala */
+
+.bomb-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    /* Sağa yasla */
+    margin-bottom: 5px;
+    /* Alt kenardan hafif boşluk */
+}
+
+
+/* Bomba İkonları */
+
+#bomb-count {
+    font-size: 1.8rem;
+    /* Biraz büyüt */
+    color: #ff3333;
+    text-shadow: 0 0 15px #ff3333;
+    margin-top: 5px;
+    font-weight: 900;
+    letter-spacing: 5px;
+    /* Bombalar arasına boşluk koy */
+}
+
+
+/* Zaman Barı Kutusu (Sol tarafı da dengeleyelim) */
+
+.gauge-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 5px;
+}
+
+
+/* --- UI DÜZELTMELERİ (PARA VE ZAMAN) --- */
+
+
+/* Para Göstergesini Sol Üst Köşeye, Skorun Altına Taşı */
+
+#ingame-money {
+    position: absolute !important;
+    top: 130px !important;
+    /* Skorun hemen altına indi */
+    left: 20px !important;
+    /* Sol kenara yaslandı */
+    bottom: auto !important;
+    /* Alt kısımdan kurtuldu */
+    font-size: 1.5rem !important;
+    color: #ffd700 !important;
+    /* Altın sarısı */
+    text-shadow: 0 0 10px #ffaa00;
+    z-index: 205;
+    /* En üstte görünsün */
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+
+/* Zaman Barını (Sol Alt) Biraz Daha Yukarı Al ve Temizle */
+
+.hud-bottom {
+    padding-left: 20px !important;
+    /* Sol boşluğu ayarla */
+}
+
+.gauge-container {
+    margin-bottom: 20px !important;
+    /* Alt kenardan yukarı it */
+}
+
+
+/* Bomba Konteynerini de Hizala */
+
+.bomb-container {
+    margin-bottom: 20px !important;
 }

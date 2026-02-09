@@ -3,9 +3,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let audioCtx;
     // --- SES YÖNETİCİSİ ---
     const SoundManager = {
-        init: () => { if (!audioCtx) audioCtx = new AudioContext(); if (audioCtx.state === 'suspended') audioCtx.resume(); },
+        init: () => { try { if (!audioCtx) audioCtx = new AudioContext(); if (audioCtx.state === 'suspended') audioCtx.resume(); } catch (e) {} },
         playTone: (freq, type, duration, vol = 0.1, detune = 0) => {
             if (!audioCtx) return;
+            // SES OPTİMİZASYONU: Çok fazla ses üst üste binince kasmayı engeller
+            if (audioCtx.currentTime > 0 && Math.random() < 0.1) return;
+
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.type = type;
@@ -22,23 +25,15 @@ document.addEventListener('DOMContentLoaded', () => {
         shoot: () => SoundManager.playTone(400, 'square', 0.1, 0.05),
         overdriveShoot: () => SoundManager.playTone(600, 'sawtooth', 0.05, 0.05),
         enemyShoot: () => SoundManager.playTone(200, 'sawtooth', 0.1, 0.05),
-        explosion: () => {
-            SoundManager.playTone(100, 'sawtooth', 0.3, 0.1);
-            setTimeout(() => SoundManager.playTone(50, 'square', 0.3, 0.1), 50);
-        },
-        powerup: () => {
-            SoundManager.playTone(600, 'sine', 0.1, 0.1);
-            setTimeout(() => SoundManager.playTone(900, 'sine', 0.2, 0.1), 100);
-        },
+        explosion: () => { SoundManager.playTone(100, 'sawtooth', 0.3, 0.1); },
+        powerup: () => { SoundManager.playTone(600, 'sine', 0.1, 0.1); },
         coin: () => SoundManager.playTone(1200, 'sine', 0.1, 0.05),
         slowMoStart: () => SoundManager.playTone(100, 'sine', 0.5, 0.2, -500),
         bomb: () => SoundManager.playTone(50, 'sawtooth', 1.0, 0.3),
         win: () => {
-            [440, 554, 659, 880].forEach((f, i) => setTimeout(() => SoundManager.playTone(f, 'square', 0.2, 0.1), i * 150));
-        },
+            [440, 554, 659, 880].forEach((f, i) => setTimeout(() => SoundManager.playTone(f, 'square', 0.2, 0.1), i * 150)); },
         achieve: () => {
-            [523, 659, 783, 1046].forEach((f, i) => setTimeout(() => SoundManager.playTone(f, 'triangle', 0.3, 0.2), i * 100));
-        }
+            [523, 659].forEach((f, i) => setTimeout(() => SoundManager.playTone(f, 'triangle', 0.3, 0.2), i * 100)); }
     };
 
     // --- ELEMENTLER ---
@@ -63,44 +58,44 @@ document.addEventListener('DOMContentLoaded', () => {
     const waveMsg = document.getElementById('wave-msg');
     const achPopup = document.getElementById('achievement-popup');
 
-    // --- OYUN VERİSİ (KAYIT) ---
+    // --- OYUN VERİSİ ---
     let saveData = JSON.parse(localStorage.getItem('galacticSaveV2')) || {
         money: 0,
         highScore: 0,
         upgrades: { hp: 1, magnet: 1, bomb: 1 },
         skins: ['default'],
         equippedSkin: 'default',
-        achievements: [] // 'first_blood', 'rich', 'survivor'
+        achievements: []
     };
 
     // --- DEĞİŞKENLER ---
     let gameState = 'MENU';
-    let score = 0;
-    collectedMoney = 0;
-    level = 1;
-    wave = 1;
-    enemiesToKill = 10;
-    let timeScale = 1.0;
-    slowMoEnergy = 100;
-    isSlowMoActive = false;
-    let overdrive = 0;
-    isOverdriveActive = false;
-    let combo = 0;
-    comboTimer = null;
-    let hp = 100;
-    maxHp = 100;
-    let bombs = 3;
-    magnetRange = 100;
-    let posX = 50;
-    speedX = 0;
-    bossActive = false;
-    hasShield = false;
-    frameCount = 0;
-    let enemies = [];
-    lasers = [];
-    enemyLasers = [];
-    powerups = [];
-    coins = [];
+    let score = 0,
+        collectedMoney = 0,
+        level = 1,
+        wave = 1,
+        enemiesToKill = 10;
+    let timeScale = 1.0,
+        slowMoEnergy = 100,
+        isSlowMoActive = false;
+    let overdrive = 0,
+        isOverdriveActive = false;
+    let combo = 0,
+        comboTimer = null;
+    let hp = 100,
+        maxHp = 100,
+        bombs = 3,
+        magnetRange = 100;
+    let posX = 50,
+        speedX = 0,
+        bossActive = false,
+        hasShield = false;
+    let frameCount = 0;
+    let enemies = [],
+        lasers = [],
+        enemyLasers = [],
+        powerups = [],
+        coins = [];
     let boss = { el: null, x: 50, hp: 1000, maxHp: 1000, dir: 1, moveTimer: 0 };
     const keys = { ArrowLeft: false, ArrowRight: false, ArrowUp: false, Space: false, KeyS: false };
 
@@ -132,10 +127,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- KONTROLLER ---
     document.addEventListener('keydown', (e) => {
         if (gameState === 'PLAYING') {
-            if (e.code === 'Space') {
-                keys.Space = true;
-                shoot();
-            }
+            if (e.code === 'Space') { keys.Space = true;
+                shoot(); }
             if (e.key === 'b' || e.key === 'B') useBomb();
             if (e.key === 's' || e.key === 'S') toggleSlowMo(true);
             if (e.key === 'p' || e.key === 'P') togglePause();
@@ -150,17 +143,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const setupTouchBtn = (id, key, action = null, hold = false) => {
         const btn = document.getElementById(id);
-        btn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            keys[key] = true;
-            if (action && !hold) action();
-            if (hold) action(true);
-        });
-        btn.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            keys[key] = false;
-            if (hold) action(false);
-        });
+        if (!btn) return;
+        btn.addEventListener('touchstart', (e) => { e.preventDefault();
+            keys[key] = true; if (action && !hold) action(); if (hold) action(true); });
+        btn.addEventListener('touchend', (e) => { e.preventDefault();
+            keys[key] = false; if (hold) action(false); });
     };
     setupTouchBtn('btn-left', 'ArrowLeft');
     setupTouchBtn('btn-right', 'ArrowRight');
@@ -168,10 +155,8 @@ document.addEventListener('DOMContentLoaded', () => {
     setupTouchBtn('btn-bomb', 'KeyB', useBomb);
     setupTouchBtn('btn-slow', 'KeyS', toggleSlowMo, true);
 
-    document.getElementById('start-btn').addEventListener('click', () => {
-        SoundManager.init();
-        initGame();
-    });
+    document.getElementById('start-btn').addEventListener('click', () => { SoundManager.init();
+        initGame(); });
     document.getElementById('shop-btn').addEventListener('click', openShop);
     document.getElementById('close-shop-btn').addEventListener('click', closeShop);
     document.getElementById('resume-btn').addEventListener('click', togglePause);
@@ -199,7 +184,6 @@ document.addEventListener('DOMContentLoaded', () => {
         bossActive = false;
         hasShield = false;
 
-        // Skin Uygula
         player.className = '';
         if (saveData.equippedSkin !== 'default') player.classList.add(`player-${saveData.equippedSkin}`);
 
@@ -209,6 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
         enemyLasers = [];
         powerups = [];
         coins = [];
+
         updateBombUI();
         gameMoneyText.innerText = 0;
         waveText.innerText = 1;
@@ -224,10 +209,8 @@ document.addEventListener('DOMContentLoaded', () => {
         waveMsg.innerText = "DALGA " + wave;
         waveMsg.style.display = 'block';
         setTimeout(() => waveMsg.style.display = 'none', 3000);
-        enemiesToKill = 10 + (wave * 5); // Her dalga zorlaşır
+        enemiesToKill = 10 + (wave * 5);
         if (wave % 5 === 0) spawnBoss();
-
-        // Dalga Rengi
         const colors = ['#1a0b2e', '#2e0b1a', '#0b2e1a', '#2e2e0b'];
         nebula.style.background = `radial-gradient(circle at center, ${colors[wave % colors.length]}, #000)`;
     }
@@ -237,96 +220,55 @@ document.addEventListener('DOMContentLoaded', () => {
         totalMoneyText.innerText = saveData.money;
     }
 
-    function openShop() {
-        document.getElementById('main-menu').classList.remove('active');
+    function openShop() { document.getElementById('main-menu').classList.remove('active');
         document.getElementById('shop-menu').classList.add('active');
-        updateShopUI();
-    }
+        updateShopUI(); }
 
-    function closeShop() {
-        document.getElementById('shop-menu').classList.remove('active');
-        document.getElementById('main-menu').classList.add('active');
-    }
+    function closeShop() { document.getElementById('shop-menu').classList.remove('active');
+        document.getElementById('main-menu').classList.add('active'); }
 
     function updateShopUI() {
         shopMoneyText.innerText = saveData.money;
-        // Upgrades
         const costs = { hp: 100, magnet: 150, bomb: 300 };
         const limits = { hp: 5, magnet: 5, bomb: 3 };
         ['hp', 'magnet', 'bomb'].forEach(type => {
             const lvl = saveData.upgrades[type];
             const cost = costs[type] * lvl;
-            document.getElementById(`lvl-${type}`).innerText = lvl >= limits[type] ? "MAX" : lvl;
+            const span = document.querySelector(`#buy-${type}`).parentElement.querySelector(`p:nth-child(3) span`);
+            if (span) span.innerText = lvl >= limits[type] ? "MAX" : lvl;
             const btn = document.getElementById(`buy-${type}`);
-            if (lvl >= limits[type]) {
-                btn.disabled = true;
+            if (lvl >= limits[type]) { btn.disabled = true;
                 btn.innerText = "MAX";
-                btn.style.background = "#555";
-            } else if (saveData.money < cost) {
-                btn.disabled = true;
+                btn.style.background = "#555"; } else if (saveData.money < cost) { btn.disabled = true;
                 btn.innerText = `YÜKSELT (${cost})`;
-                btn.style.background = "#555";
-            } else {
-                btn.disabled = false;
+                btn.style.background = "#555"; } else { btn.disabled = false;
                 btn.style.background = "#00f0ff";
-                btn.innerText = `YÜKSELT (${cost})`;
-            }
-        });
-        // Skins
-        ['default', 'crimson', 'midas', 'void'].forEach(skin => {
-            const btn = document.getElementById(`skin-${skin}`);
-            if (saveData.skins.includes(skin)) {
-                if (saveData.equippedSkin === skin) {
-                    btn.innerText = "KUŞANILDI";
-                    btn.style.background = "#00ff00";
-                    btn.onclick = null;
-                } else {
-                    btn.innerText = "KUŞAN";
-                    btn.style.background = "#fff";
-                    btn.style.color = "#000";
-                    btn.onclick = () => equipSkin(skin);
-                }
-            } else {
-                // Fiyatları zaten HTML'de yazıyor
-            }
+                btn.innerText = `YÜKSELT (${cost})`; }
         });
     }
 
     function buyUpgrade(type, baseCost) {
         const lvl = saveData.upgrades[type];
         const cost = baseCost * lvl;
-        if (saveData.money >= cost) {
-            saveData.money -= cost;
+        if (saveData.money >= cost) { saveData.money -= cost;
             saveData.upgrades[type]++;
             localStorage.setItem('galacticSaveV2', JSON.stringify(saveData));
             updateShopUI();
             updateMainMenu();
-            SoundManager.powerup();
-        }
+            SoundManager.powerup(); }
     }
 
     function checkAchievements() {
-        const unlocks = [
-            { id: 'first_blood', desc: "İlk Kan (1 Düşman)", cond: () => score > 100 },
-            { id: 'rich', desc: "Zengin (1000 Para)", cond: () => saveData.money >= 1000 },
-            { id: 'survivor', desc: "Hayatta Kalan (Dalga 5)", cond: () => wave >= 5 },
-            { id: 'veteran', desc: "Gazi (Dalga 10)", cond: () => wave >= 10 }
-        ];
-        unlocks.forEach(ach => {
-            if (!saveData.achievements.includes(ach.id) && ach.cond()) {
-                saveData.achievements.push(ach.id);
+        const unlocks = [{ id: 'first_blood', desc: "İlk Kan", cond: () => score > 100 }, { id: 'rich', desc: "Zengin", cond: () => saveData.money >= 1000 }, { id: 'survivor', desc: "Hayatta Kalan", cond: () => wave >= 5 }];
+        unlocks.forEach(ach => { if (!saveData.achievements.includes(ach.id) && ach.cond()) { saveData.achievements.push(ach.id);
                 localStorage.setItem('galacticSaveV2', JSON.stringify(saveData));
-                showAchievement(ach.desc);
-            }
-        });
+                showAchievement(ach.desc); } });
     }
 
-    function showAchievement(text) {
-        document.getElementById('ach-desc').innerText = text;
+    function showAchievement(text) { document.getElementById('ach-desc').innerText = text;
         achPopup.classList.add('show');
         SoundManager.achieve();
-        setTimeout(() => achPopup.classList.remove('show'), 3000);
-    }
+        setTimeout(() => achPopup.classList.remove('show'), 3000); }
 
     // --- GAME LOOP ---
     function gameLoop() {
@@ -346,15 +288,11 @@ document.addEventListener('DOMContentLoaded', () => {
         player.style.left = posX + '%';
         player.style.transform = `translateX(-50%) rotate(${speedX * -2}deg)`;
 
-        // Dalga İlerleme
-        if (enemiesToKill <= 0 && enemies.length === 0 && !bossActive) {
-            wave++;
+        if (enemiesToKill <= 0 && enemies.length === 0 && !bossActive) { wave++;
             checkAchievements();
-            startWave();
-        }
-
-        // Spawn (Dalga bazlı)
-        if (!bossActive && enemiesToKill > 0 && enemies.length < 5 + wave) { // Ekranda aynı anda max düşman
+            startWave(); }
+        // Optimize Edilmiş Spawn (Aynı anda max 15 düşman)
+        if (!bossActive && enemiesToKill > 0 && enemies.length < 15) {
             if (Math.random() < (0.02 * timeScale) + (wave * 0.005)) spawnEnemy();
         }
 
@@ -367,7 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
         requestAnimationFrame(gameLoop);
     }
 
-    // Diğer fonksiyonlar (Öncekilerin aynısı, kısaltıldı)
+    // --- OYUN NESNELERİ ---
     function spawnCoin(xPct, yPx) {
         const el = document.createElement('div');
         el.className = 'scrap';
@@ -382,37 +320,30 @@ document.addEventListener('DOMContentLoaded', () => {
         const screenW = window.innerWidth;
         const playerPx = (posX / 100) * screenW;
         const playerTop = player.offsetTop;
-        coins.forEach((c, i) => {
+        for (let i = coins.length - 1; i >= 0; i--) {
+            let c = coins[i];
             const coinPx = (c.x / 100) * screenW;
             const dist = Math.hypot(coinPx - playerPx, c.y - playerTop);
-            if (dist < magnetRange) {
-                c.vx += (playerPx - coinPx) * 0.05 * timeScale;
-                c.vy += (playerTop - c.y) * 0.05 * timeScale;
-            } else {
-                c.vy += 0.2 * timeScale;
-                c.vx *= 0.95;
-            }
+            if (dist < magnetRange) { c.vx += (playerPx - coinPx) * 0.05 * timeScale;
+                c.vy += (playerTop - c.y) * 0.05 * timeScale; } else { c.vy += 0.2 * timeScale;
+                c.vx *= 0.95; }
             c.x += (c.vx / screenW) * 100;
             c.y += c.vy;
             c.el.style.left = c.x + '%';
             c.el.style.top = c.y + 'px';
-            if (dist < 40) {
-                collectedMoney += 10;
+            if (dist < 40) { collectedMoney += 10;
                 gameMoneyText.innerText = collectedMoney;
                 SoundManager.coin();
                 createFloatingText(c.x, c.y, "+10", "heal");
                 c.el.remove();
-                coins.splice(i, 1);
-            } else if (c.y > window.innerHeight) {
-                c.el.remove();
-                coins.splice(i, 1);
-            }
-        });
+                coins.splice(i, 1); } else if (c.y > window.innerHeight) { c.el.remove();
+                coins.splice(i, 1); }
+        }
     }
 
     function spawnEnemy() {
         const rand = Math.random();
-        let type = 'ship';
+        let type = 'enemy-ship';
         if (rand < 0.2) type = 'kamikaze';
         else if (rand < 0.4) type = 'interceptor';
         const el = document.createElement('div');
@@ -425,44 +356,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateEnemies() {
-        enemies.forEach((e, i) => {
+        for (let i = enemies.length - 1; i >= 0; i--) {
+            let e = enemies[i];
             let moveSpeed = e.speed * timeScale;
-            if (e.type === 'kamikaze') {
-                if (e.x < posX) e.x += 0.5 * timeScale;
+            if (e.type === 'kamikaze') { if (e.x < posX) e.x += 0.5 * timeScale;
                 else e.x -= 0.5 * timeScale;
-                e.y += moveSpeed * 1.5;
-            } else if (e.type === 'interceptor') {
-                if (e.x < posX) e.x += 0.3 * timeScale;
+                e.y += moveSpeed * 1.5; } else if (e.type === 'interceptor') { if (e.x < posX) e.x += 0.3 * timeScale;
                 else e.x -= 0.3 * timeScale;
-                e.y += moveSpeed;
-            } else {
-                e.y += moveSpeed;
-                if (Math.random() < 0.01 * timeScale) {
-                    createLaser(e.x, e.y + 40, true);
-                    SoundManager.enemyShoot();
-                }
-            }
+                e.y += moveSpeed; } else { e.y += moveSpeed; if (Math.random() < 0.01 * timeScale) { createLaser(e.x, e.y + 40, true);
+                    SoundManager.enemyShoot(); } }
             e.el.style.top = e.y + 'px';
             e.el.style.left = e.x + '%';
-            if (checkRect(e.el.getBoundingClientRect(), player.getBoundingClientRect())) {
-                takeDamage(30);
+            if (checkRect(e.el.getBoundingClientRect(), player.getBoundingClientRect())) { takeDamage(30);
                 triggerGlitch();
                 e.el.remove();
-                enemies.splice(i, 1);
-            }
-            if (e.y > window.innerHeight) {
-                e.el.remove();
-                enemies.splice(i, 1);
-            }
-        });
+                enemies.splice(i, 1); }
+            if (e.y > window.innerHeight) { e.el.remove();
+                enemies.splice(i, 1); }
+        }
     }
 
     function updateLasers() {
-        lasers.forEach((l, i) => {
+        for (let i = lasers.length - 1; i >= 0; i--) {
+            let l = lasers[i];
             l.bottom += 15 * timeScale;
             l.el.style.bottom = l.bottom + 'px';
             l.el.style.left = l.x + '%';
-            enemies.forEach((e, j) => {
+            let hit = false;
+            for (let j = enemies.length - 1; j >= 0; j--) {
+                let e = enemies[j];
                 if (checkRect(l.el.getBoundingClientRect(), e.el.getBoundingClientRect())) {
                     createFloatingText(e.x, e.y, Math.floor(100), "white");
                     createExplosion(e.x, e.y);
@@ -473,9 +395,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     l.el.remove();
                     lasers.splice(i, 1);
                     enemiesToKill--;
+                    hit = true;
+                    break;
                 }
-            });
-            if (bossActive && boss.el && checkRect(l.el.getBoundingClientRect(), boss.el.getBoundingClientRect())) {
+            }
+            if (!hit && bossActive && boss.el && checkRect(l.el.getBoundingClientRect(), boss.el.getBoundingClientRect())) {
                 boss.hp -= 10;
                 l.el.remove();
                 lasers.splice(i, 1);
@@ -483,25 +407,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 bossHpBar.style.width = (boss.hp / boss.maxHp * 100) + '%';
                 if (boss.hp <= 0) gameWin();
             }
-            if (l.bottom > window.innerHeight) {
-                l.el.remove();
-                lasers.splice(i, 1);
-            }
-        });
-        enemyLasers.forEach((l, i) => {
+            if (!hit && l.bottom > window.innerHeight) { l.el.remove();
+                lasers.splice(i, 1); }
+        }
+        for (let i = enemyLasers.length - 1; i >= 0; i--) {
+            let l = enemyLasers[i];
             l.y += 10 * timeScale;
             l.el.style.top = l.y + 'px';
             l.el.style.left = l.x + '%';
-            if (checkRect(l.el.getBoundingClientRect(), player.getBoundingClientRect())) {
-                takeDamage(10);
+            if (checkRect(l.el.getBoundingClientRect(), player.getBoundingClientRect())) { takeDamage(10);
                 l.el.remove();
-                enemyLasers.splice(i, 1);
-            }
-            if (l.y > window.innerHeight) {
-                l.el.remove();
-                enemyLasers.splice(i, 1);
-            }
-        });
+                enemyLasers.splice(i, 1); }
+            if (l.y > window.innerHeight) { l.el.remove();
+                enemyLasers.splice(i, 1); }
+        }
     }
 
     function spawnBoss() {
@@ -535,18 +454,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Geri kalan yardımcı fonksiyonlar (kısaltıldı)
     function toggleSlowMo(active) {
-        if (active && slowMoEnergy > 5) {
-            isSlowMoActive = true;
+        if (active && slowMoEnergy > 5) { isSlowMoActive = true;
             timeScale = 0.3;
             document.body.classList.add('slow-motion');
-            SoundManager.slowMoStart();
-        } else {
-            isSlowMoActive = false;
+            SoundManager.slowMoStart(); } else { isSlowMoActive = false;
             timeScale = 1.0;
-            document.body.classList.remove('slow-motion');
-        }
+            document.body.classList.remove('slow-motion'); }
     }
 
     function togglePause() {
@@ -561,12 +475,10 @@ document.addEventListener('DOMContentLoaded', () => {
             updateBombUI();
             SoundManager.bomb();
             triggerGlitch();
-            enemies.forEach(e => {
-                createFloatingText(e.x, 300, "SİLİNDİ", "crit");
+            enemies.forEach(e => { createFloatingText(e.x, 300, "SİLİNDİ", "crit");
                 e.el.remove();
                 addScore(50);
-                enemiesToKill--;
-            });
+                enemiesToKill--; });
             enemies = [];
             enemyLasers.forEach(l => l.el.remove());
             enemyLasers = [];
@@ -574,27 +486,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function shoot() {
-        if (isOverdriveActive) {
-            createLaser(posX - 5, 110, false);
+        if (isOverdriveActive) { createLaser(posX - 5, 110, false);
             createLaser(posX + 5, 110, false);
-            SoundManager.overdriveShoot();
-        } else {
-            createLaser(posX, 110, false);
-            SoundManager.shoot();
-        }
+            SoundManager.overdriveShoot(); } else { createLaser(posX, 110, false);
+            SoundManager.shoot(); }
     }
 
     function createLaser(x, offsetBottom, isEnemy, angle = 0) {
         const el = document.createElement('div');
         el.className = isEnemy ? 'enemy-laser' : 'laser';
         el.style.left = x + '%';
-        if (isEnemy) {
-            el.style.top = offsetBottom + 'px';
-            enemyLasers.push({ el, x, y: offsetBottom, angle });
-        } else {
-            el.style.bottom = offsetBottom + 'px';
-            lasers.push({ el, x, bottom: offsetBottom, angle });
-        }
+        if (isEnemy) { el.style.top = offsetBottom + 'px';
+            enemyLasers.push({ el, x, y: offsetBottom, angle }); } else { el.style.bottom = offsetBottom + 'px';
+            lasers.push({ el, x, bottom: offsetBottom, angle }); }
         gameObjectsDiv.appendChild(el);
     }
 
@@ -632,12 +536,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function takeDamage(amount) {
-        if (hasShield) {
-            hasShield = false;
+        if (hasShield) { hasShield = false;
             document.getElementById('shield-effect').style.opacity = 0;
-            createFloatingText(posX, player.offsetTop, "BLOKLANDI", "white");
-            return;
-        }
+            createFloatingText(posX, player.offsetTop, "BLOKLANDI", "white"); return; }
         hp -= amount;
         hpBar.style.width = (hp / maxHp * 100) + '%';
         triggerGlitch();
@@ -652,16 +553,11 @@ document.addEventListener('DOMContentLoaded', () => {
         comboBox.classList.add('combo-active');
         comboBox.classList.remove('combo-hidden');
         if (comboTimer) clearTimeout(comboTimer);
-        comboTimer = setTimeout(() => {
-            combo = 0;
+        comboTimer = setTimeout(() => { combo = 0;
             comboBox.classList.remove('combo-active');
-            comboBox.classList.add('combo-hidden');
-        }, 2000);
-        if (!isOverdriveActive) {
-            overdrive = Math.min(overdrive + (amount * 0.1), 100);
-            overdriveBar.style.width = overdrive + '%';
-            if (overdrive >= 100) activateOverdrive();
-        }
+            comboBox.classList.add('combo-hidden'); }, 2000);
+        if (!isOverdriveActive) { overdrive = Math.min(overdrive + (amount * 0.1), 100);
+            overdriveBar.style.width = overdrive + '%'; if (overdrive >= 100) activateOverdrive(); }
     }
 
     function activateOverdrive() {
@@ -669,21 +565,17 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('overdrive-aura').style.opacity = 1;
         createFloatingText(posX, player.offsetTop, "OVERDRIVE!", "crit");
         let rapidFire = setInterval(() => shoot(), 100);
-        setTimeout(() => {
-            isOverdriveActive = false;
+        setTimeout(() => { isOverdriveActive = false;
             document.getElementById('overdrive-aura').style.opacity = 0;
             clearInterval(rapidFire);
             overdrive = 0;
-            overdriveBar.style.width = '0%';
-        }, 5000);
+            overdriveBar.style.width = '0%'; }, 5000);
     }
 
     function checkRect(r1, r2) { return !(r2.left > r1.right || r2.right < r1.left || r2.top > r1.bottom || r2.bottom < r1.top); }
 
-    function gameWin() {
-        SoundManager.win();
-        endGame(true);
-    }
+    function gameWin() { SoundManager.win();
+        endGame(true); }
 
     function endGame(win) {
         gameState = 'GAME_OVER';
