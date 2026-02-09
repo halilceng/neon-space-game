@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Galactic War: Legends</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="game-container" id="game-container">
+        <div class="nebula-layer" id="nebula"></div>
+        <div class="stars-layer" id="stars-far"></div>
+        <div class="stars-layer" id="stars-mid"></div>
+        <div class="stars-layer" id="stars-near"></div>
+
+        <div id="game-objects"></div>
+        <div id="floating-text-layer"></div>
+        <div id="flash-effect"></div>
+        <div id="glitch-overlay"></div>
+
+        <div id="wave-msg">DALGA 1</div>
+        <div id="achievement-popup">
+            <div class="icon">🏆</div>
+            <div class="text">
+                <div class="title">BAŞARIM AÇILDI!</div>
+                <div id="ach-desc">İlk Kan</div>
+            </div>
+        </div>
+
+        <div id="player">
+            <div id="shield-effect"></div>
+            <div id="overdrive-aura"></div>
+            <div class="rocket-img"></div>
+            <div id="trail-emitter"></div>
+            <div class="engine-fire">
+                <div class="fire-core"></div>
+            </div>
+        </div>
+
+        <div id="boss-warning">⚠️ UYARI: BOSS YAKLAŞIYOR ⚠️</div>
+    </div>
+
+    <div id="main-menu" class="screen active">
+        <h1 class="game-title">GALACTIC WAR</h1>
+        <div class="menu-stats">
+            <p>REKOR: <span id="menu-high-score">0</span></p>
+            <p class="money-text">💰 PARA: <span id="total-money">0</span></p>
+        </div>
+
+        <button id="start-btn" class="glow-btn">SAVAŞA BAŞLA</button>
+        <button id="shop-btn" class="glow-btn shop-btn-style">MARKET & HANGAR</button>
+
+        <div class="controls-info">
+            <p>S: Slow Mo | B: Bomba | Space: Ateş</p>
+        </div>
+    </div>
+
+    <div id="shop-menu" class="screen">
+        <div class="shop-tabs">
+            <button class="tab-btn active" onclick="switchTab('upgrades')">GELİŞTİRME</button>
+            <button class="tab-btn" onclick="switchTab('skins')">HANGAR (SKINS)</button>
+        </div>
+
+        <p class="money-text" style="margin-top:10px;">BAKİYE: <span id="shop-money">0</span> 💰</p>
+
+        <div id="tab-upgrades" class="shop-content active">
+            <div class="shop-grid">
+                <div class="shop-item">
+                    <div class="icon">❤️</div>
+                    <h3>GÖVDE ZIRHI</h3>
+                    <p>Maksimum Can</p>
+                    <p>Seviye: <span id="lvl-hp">1</span></p>
+                    <button class="buy-btn" id="buy-hp">YÜKSELT</button>
+                </div>
+                <div class="shop-item">
+                    <div class="icon">🧲</div>
+                    <h3>MANYETİK ALAN</h3>
+                    <p>Para Çekimi</p>
+                    <p>Seviye: <span id="lvl-magnet">1</span></p>
+                    <button class="buy-btn" id="buy-magnet">YÜKSELT</button>
+                </div>
+                <div class="shop-item">
+                    <div class="icon">💣</div>
+                    <h3>CEPHANELİK</h3>
+                    <p>Başlangıç Bombası</p>
+                    <p>Seviye: <span id="lvl-bomb">1</span></p>
+                    <button class="buy-btn" id="buy-bomb">YÜKSELT</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-skins" class="shop-content">
+            <div class="shop-grid">
+                <div class="shop-item skin-item">
+                    <div class="skin-preview default">🚀</div>
+                    <h3>STANDART</h3>
+                    <p>Orijinal Tasarım</p>
+                    <button class="buy-btn" id="skin-default" onclick="equipSkin('default')">KUŞANILDI</button>
+                </div>
+                <div class="shop-item skin-item">
+                    <div class="skin-preview crimson">🚀</div>
+                    <h3>KIZIL BARON</h3>
+                    <p>Agressif Görünüm</p>
+                    <button class="buy-btn" id="skin-crimson" onclick="buySkin('crimson', 500)">500 💰</button>
+                </div>
+                <div class="shop-item skin-item">
+                    <div class="skin-preview midas">🚀</div>
+                    <h3>ALTIN KARTAL</h3>
+                    <p>Parlak Kaplama</p>
+                    <button class="buy-btn" id="skin-midas" onclick="buySkin('midas', 1000)">1000 💰</button>
+                </div>
+                <div class="shop-item skin-item">
+                    <div class="skin-preview void">🚀</div>
+                    <h3>GÖLGE GEZGİNİ</h3>
+                    <p>Hayalet Modu</p>
+                    <button class="buy-btn" id="skin-void" onclick="buySkin('void', 2000)">2000 💰</button>
+                </div>
+            </div>
+        </div>
+
+        <button id="close-shop-btn" class="glow-btn">MENÜYE DÖN</button>
+    </div>
+
+    <div id="pause-menu" class="screen">
+        <h2>DURAKLATILDI</h2>
+        <button id="resume-btn" class="glow-btn">DEVAM ET</button>
+    </div>
+
+    <div class="hud" id="game-ui" style="display: none;">
+        <div class="hud-top">
+            <div class="score-group">
+                <div class="score-box">SKOR: <span id="score-text">0</span></div>
+                <div id="combo-box" class="combo-hidden">x<span id="combo-count">0</span></div>
+            </div>
+
+            <div class="wave-info">DALGA <span id="wave-text">1</span></div>
+
+            <div class="overdrive-container">
+                <div class="label">OVERDRIVE</div>
+                <div class="bar-bg">
+                    <div class="bar" id="overdrive-bar" style="width: 0%;"></div>
+                </div>
+            </div>
+
+            <div class="hp-box">CAN:
+                <div class="hp-bar-bg">
+                    <div id="player-hp-bar" style="width: 100%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="ingame-money">💰 <span id="game-money-text">0</span></div>
+
+        <div id="boss-hud" class="boss-hud">
+            <div class="boss-name">YOK EDİCİ</div>
+            <div class="boss-bar-bg">
+                <div id="boss-hp-bar"></div>
+            </div>
+        </div>
+
+        <div class="hud-bottom">
+            <div class="gauge-container">
+                <div class="label">ZAMAN (S)</div>
+                <div class="bar-bg">
+                    <div class="bar" id="slowmo-bar" style="width: 100%; background: #00aaff;"></div>
+                </div>
+            </div>
+
+            <div class="bomb-container">
+                <div class="label">BOMBA (B)</div>
+                <div id="bomb-count">💣 💣 💣</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="mobile-controls">
+        <div class="d-pad">
+            <button id="btn-left" class="touch-btn">⬅</button>
+            <button id="btn-right" class="touch-btn">➡</button>
+        </div>
+        <div class="action-pad">
+            <button id="btn-slow" class="touch-btn slow-btn">⏳</button>
+            <button id="btn-bomb" class="touch-btn bomb-btn">💣</button>
+            <button id="btn-fire" class="touch-btn fire-btn">🔥</button>
+        </div>
+    </div>
+
+    <div class="screen" id="success-screen">
+        <h1 class="win">ZAFER!</h1>
+        <p>Toplanan: <span id="loot-win">0</span> 💰</p>
+        <p>Skor: <span id="final-score-win">0</span></p>
+        <button onclick="location.reload()" class="glow-btn">MENÜ</button>
+    </div>
+
+    <div class="screen" id="fail-screen">
+        <h1 class="lose">GÖREV BAŞARISIZ</h1>
+        <p>Toplanan: <span id="loot-lose">0</span> 💰</p>
+        <p>Skor: <span id="final-score-lose">0</span></p>
+        <button onclick="location.reload()" class="glow-btn">HANGARA DÖN</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
