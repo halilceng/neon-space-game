@@ -968,3 +968,28 @@ body {
 .bomb-container {
     margin-bottom: 20px !important;
 }
+
+
+/* --- MOBİL DÜZELTME YAMASI --- */
+
+@media (max-width: 1024px) {
+    /* Gemiyi mobilde tuşların üzerine çıkar */
+    #player {
+        bottom: 250px !important;
+        /* Daha yukarıda dursun */
+        width: 40px;
+        /* Mobilde gemi biraz daha kibar olsun */
+        height: 60px;
+    }
+    /* Tuşların yerini garantiye al */
+    #mobile-controls {
+        bottom: 30px !important;
+        height: 150px !important;
+        z-index: 400 !important;
+        /* Geminin üstünde kalsın (tıklama için) */
+    }
+    /* Gemi tuşların altında kalmasın diye Z-Index ayarı */
+    #game-layer {
+        z-index: 100;
+    }
+}
